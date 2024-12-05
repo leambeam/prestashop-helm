@@ -49,7 +49,16 @@ spec:
           {{- with .Values.volumeMounts }}
           volumeMounts:
             {{- toYaml . | nindent 12 }}
-          {{- end }}
+          env:
+            - name: DB_SERVER
+              value: {{ .Values.database.mariadb.auth.username | quote }}  # MariaDB host
+            - name: DB_NAME
+              value: {{ .Values.database.mariadb.auth.database | quote }}  # Database name
+            - name: DB_USER
+              value: {{ .Values.database.mariadb.auth.username | quote }}  # Database user
+            - name: DB_PASS
+              value: {{ .Values.database.mariadb.auth.password | quote }}  # Database password
+                    {{- end }}
       {{- with .Values.volumes }}
       volumes:
         {{- toYaml . | nindent 8 }}

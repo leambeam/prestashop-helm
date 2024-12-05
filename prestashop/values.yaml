@@ -7,11 +7,11 @@ replicaCount: 1
 
 # This sets the container image more information can be found here: https://kubernetes.io/docs/concepts/containers/images/
 image:
-  repository: nginx
+  repository: gitlab.labranet.jamk.fi:4567/presta-shop-development-release-x/presta-shop-service-x
   # This sets the pull policy for images.
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
-  tag: ""
+  tag: "latest"
 
 # This is for the secretes for pulling an image from a private repository more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
 imagePullSecrets: []
@@ -52,7 +52,7 @@ securityContext: {}
 # This is for setting up a service more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/
 service:
   # This sets the service type more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#publishing-services-service-types
-  type: ClusterIP
+  type: LoadBalancer
   # This sets the ports more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#field-spec-ports
   port: 80
 
@@ -104,20 +104,40 @@ autoscaling:
   # targetMemoryUtilizationPercentage: 80
 
 # Additional volumes on the output Deployment definition.
-volumes: []
-# - name: foo
-#   secret:
-#     secretName: mysecret
-#     optional: false
+volumes:
+  - name: prestashop-data
+    persistentVolumeClaim:
+      claimName: prestashop-data-pvc
 
 # Additional volumeMounts on the output Deployment definition.
-volumeMounts: []
-# - name: foo
-#   mountPath: "/etc/foo"
-#   readOnly: true
+volumeMounts:
+  - name: prestashop-data
+    mountPath: /var/www/html
+    subPath: html
+    readOnly: false
 
 nodeSelector: {}
 
 tolerations: []
 
 affinity: {}
+
+# Database Configuration
+database:
+  # Enable database configuration
+  enabled: true
+  mariadb:
+    # MariaDB settings for authentication
+    auth:
+      rootPassword: rootpassword
+      database: prestashop
+      username: prestashop
+      password: prestashoppassword
+    # Configure persistent storage for the database
+    persistence:
+      enabled: true
+      size: 5Gi
+      storageClass: standard
+    # Disable replication if you don't need a multi-node MariaDB setup
+    replication:
+      enabled: false
