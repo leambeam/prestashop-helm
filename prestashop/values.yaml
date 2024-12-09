@@ -7,14 +7,15 @@ replicaCount: 1
 
 # This sets the container image more information can be found here: https://kubernetes.io/docs/concepts/containers/images/
 image:
-  repository: nginx
+  repository: gitlab.labranet.jamk.fi:4567/presta-shop-development-release-x/presta-shop-service-x
   # This sets the pull policy for images.
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
-  tag: ""
+  tag: "latest"
 
 # This is for the secretes for pulling an image from a private repository more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
-imagePullSecrets: []
+imagePullSecrets: 
+  - name: presta-base-secret
 # This is to override the chart name.
 nameOverride: ""
 fullnameOverride: ""
@@ -49,12 +50,18 @@ securityContext: {}
   # runAsNonRoot: true
   # runAsUser: 1000
 
+# Ports inside the PrestaShop container i.e ports that you would usually use when running in Docker.
+containerPorts:
+  http: 80
+  https: 443
 # This is for setting up a service more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/
 service:
   # This sets the service type more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#publishing-services-service-types
   type: ClusterIP
   # This sets the ports more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#field-spec-ports
-  port: 80
+  ports: # Set ports for external access
+    http: 80 
+    https: 443 
 
 # This block is for setting up the ingress for more information can be found here: https://kubernetes.io/docs/concepts/services-networking/ingress/
 ingress:
