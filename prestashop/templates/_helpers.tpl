@@ -72,5 +72,12 @@ app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{- end -}}
 
 {{- define "mysql.selectorLabels" -}}
-app: mysql
+app.kubernetes.io/name: mysql
+app.kubernetes.io/instance: {{ .Release.Name }}
+app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{- end -}}
+
+
+
+
+
