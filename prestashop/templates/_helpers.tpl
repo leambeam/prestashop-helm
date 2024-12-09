@@ -2,7 +2,7 @@
 Expand the name of the chart.
 */}}
 {{- define "prestashop.name" -}}
-{{- default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" }}
+{{- default .Chart.Name .Values.prestashop.nameOverride | trunc 63 | trimSuffix "-" }}
 {{- end }}
 
 {{/*
@@ -12,9 +12,9 @@ If release name contains chart name it will be used as a full name.
 */}}
 {{- define "prestashop.fullname" -}}
 {{- if .Values.fullnameOverride }}
-{{- .Values.fullnameOverride | trunc 63 | trimSuffix "-" }}
+{{- .Values.prestashop.fullnameOverride | trunc 63 | trimSuffix "-" }}
 {{- else }}
-{{- $name := default .Chart.Name .Values.nameOverride }}
+{{- $name := default .Chart.Name .Values.prestashop.nameOverride }}
 {{- if contains $name .Release.Name }}
 {{- .Release.Name | trunc 63 | trimSuffix "-" }}
 {{- else }}
@@ -54,9 +54,23 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 Create the name of the service account to use
 */}}
 {{- define "prestashop.serviceAccountName" -}}
-{{- if .Values.serviceAccount.create }}
-{{- default (include "prestashop.fullname" .) .Values.serviceAccount.name }}
+{{- if .Values.prestashop.serviceAccount.create }}
+{{- default (include "prestashop.fullname" .) .Values.prestashop.serviceAccount.name }}
 {{- else }}
-{{- default "default" .Values.serviceAccount.name }}
+{{- default "default" .Values.prestashop.serviceAccount.name }}
 {{- end }}
 {{- end }}
+
+{{- define "mysql.fullname" -}}
+{{ .Release.Name }}-mysql
+{{- end -}}
+
+{{- define "mysql.labels" -}}
+app.kubernetes.io/name: mysql
+app.kubernetes.io/instance: {{ .Release.Name }}
+app.kubernetes.io/managed-by: {{ .Release.Service }}
+{{- end -}}
+
+{{- define "mysql.selectorLabels" -}}
+app: mysql
+{{- end -}}

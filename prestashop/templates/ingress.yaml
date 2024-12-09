@@ -1,21 +1,21 @@
-{{- if .Values.ingress.enabled -}}
+{{- if .Values.prestashop.ingress.enabled -}}
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: {{ include "prestashop.fullname" . }}
   labels:
     {{- include "prestashop.labels" . | nindent 4 }}
-  {{- with .Values.ingress.annotations }}
+  {{- with .Values.prestashop.ingress.annotations }}
   annotations:
     {{- toYaml . | nindent 4 }}
   {{- end }}
 spec:
-  {{- with .Values.ingress.className }}
+  {{- with .Values.prestashop.ingress.className }}
   ingressClassName: {{ . }}
   {{- end }}
-  {{- if .Values.ingress.tls }}
+  {{- if .Values.prestashop.ingress.tls }}
   tls:
-    {{- range .Values.ingress.tls }}
+    {{- range .Values.prestashop.ingress.tls }}
     - hosts:
         {{- range .hosts }}
         - {{ . | quote }}
@@ -24,7 +24,7 @@ spec:
     {{- end }}
   {{- end }}
   rules:
-    {{- range .Values.ingress.hosts }}
+    {{- range .Values.prestashop.ingress.hosts }}
     - host: {{ .host | quote }}
       http:
         paths:
@@ -37,7 +37,7 @@ spec:
               service:
                 name: {{ include "prestashop.fullname" $ }}
                 port:
-                  number: {{ $.Values.service.port }}
+                  number: {{ $.Values.prestashop.service.ports.https }}
           {{- end }}
     {{- end }}
 {{- end }}

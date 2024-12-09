@@ -1,0 +1,73 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "mysql.fullname" . }}
+  labels:
+    {{- include "mysql.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.mysql.autoscaling.enabled }}
+  replicas: {{ .Values.mysql.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "mysql.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.mysql.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "mysql.labels" . | nindent 8 }}
+        {{- with .Values.mysql.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      {{- with .Values.mysql.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "prestashop.serviceAccountName" . }} # TO DO: modify service account
+      securityContext:
+        {{- toYaml .Values.mysql.podSecurityContext | nindent 8 }}
+      containers:
+        - name: mysql #{{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.mysql.securityContext | nindent 12 }}
+          image: "{{ .Values.mysql.image.repository }}:{{ .Values.mysql.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.mysql.image.pullPolicy }}
+          env:
+            - name: MYSQL_ROOT_PASSWORD
+              value: admin
+            - name: MYSQL_DATABASE
+              value: prestashop
+          ports:
+            - name: mysql
+              containerPort: {{ .Values.mysql.service.ports.mysql }}
+              protocol: TCP
+          livenessProbe:
+            {{- toYaml .Values.mysql.livenessProbe | nindent 12 }}
+          readinessProbe:
+            {{- toYaml .Values.mysql.readinessProbe | nindent 12 }}
+          resources:
+            {{- toYaml .Values.mysql.resources | nindent 12 }}
+          {{- with .Values.mysql.volumeMounts }}
+          volumeMounts:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+      {{- with .Values.mysql.volumes }}
+      volumes:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.mysql.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.mysql.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.mysql.tolerations }} 
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
