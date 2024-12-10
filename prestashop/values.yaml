@@ -52,7 +52,7 @@ prestashop:
     # runAsNonRoot: true
     # runAsUser: 1000
 
-  # Ports inside the PrestaShop container i.e ports that you would usually use when running in Docker.
+  # Ports inside the PrestaShop container i.e ports that you would usually use when running 'service-x' in Docker.
   containerPorts:
     http: 80
     https: 443
@@ -130,6 +130,22 @@ prestashop:
   tolerations: []
 
   affinity: {}
+
+  # Environment variables referenced by 'prestashop/templates/deployment.yaml' and 'prestashop/templates/mysql-deployment.yaml' for website and db setup.
+  # These variables can be modified on install by passing the flag '--set' fex '--set prestashop.env.PS_DOMAIN="newdomain.com"'.
+  # See: https://hub.docker.com/r/prestashop/prestashop/ for more information on variables.
+  
+  env:
+    DB_NAME: "prestashop"
+    DB_USER: "root" # Change manually for now since causing bugs in the db if done via 'set'
+    DB_PASSWD: "adminPrEsTa123" # Change manually for now since causing bugs in the db if done via 'set'
+    PS_INSTALL_AUTO: "1" # Set to true thus will perform an auto install. 
+    PS_DOMAIN: "relaamo.fi"
+    PS_COUNTRY: "FI"
+    PS_LANGUAGE: "en"
+    ADMIN_MAIL: "testuser@mail.com"
+    ADMIN_PASSWD: "ReAlPaSsWoRd759***"
+    PS_FOLDER_ADMIN: "admin228"
 
 
 mysql: 

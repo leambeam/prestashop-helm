@@ -36,11 +36,12 @@ spec:
             {{- toYaml .Values.mysql.securityContext | nindent 12 }}
           image: "{{ .Values.mysql.image.repository }}:{{ .Values.mysql.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.mysql.image.pullPolicy }}
+          # Variables are referenced from 'prestashop/values.yaml'
           env:
             - name: MYSQL_ROOT_PASSWORD
-              value: admin
+              value: {{ .Values.prestashop.env.DB_PASSWD | quote }}
             - name: MYSQL_DATABASE
-              value: prestashop
+              value: {{ .Values.prestashop.env.DB_NAME | quote }}
           ports:
             - name: mysql
               containerPort: {{ .Values.mysql.service.ports.mysql }}

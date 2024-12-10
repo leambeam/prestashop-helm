@@ -36,6 +36,30 @@ spec:
             {{- toYaml .Values.prestashop.securityContext | nindent 12 }}
           image: "{{ .Values.prestashop.image.repository }}:{{ .Values.prestashop.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.prestashop.image.pullPolicy }}
+          # Variables are referenced from 'prestashop/values.yaml'
+          env: 
+            - name: DB_SERVER
+              value: "{{ .Release.Name }}-mysql.default.svc.cluster.local" # Get the IP of the pod running the database
+            - name: DB_NAME
+              value: {{ .Values.prestashop.env.DB_NAME | quote }}
+            - name: DB_USER
+              value: {{ .Values.prestashop.env.DB_USER | quote }}
+            - name: DB_PASSWD
+              value: {{ .Values.prestashop.env.DB_PASSWD | quote }}
+            - name: PS_INSTALL_AUTO
+              value: {{ .Values.prestashop.env.PS_INSTALL_AUTO | quote }}
+            - name: PS_DOMAIN
+              value: {{ .Values.prestashop.env.PS_DOMAIN | quote }}
+            - name: PS_COUNTRY
+              value: {{ .Values.prestashop.env.PS_COUNTRY | quote }}
+            - name: PS_LANGUAGE
+              value: {{ .Values.prestashop.env.PS_LANGUAGE | quote }}
+            - name: ADMIN_MAIL
+              value: {{ .Values.prestashop.env.ADMIN_MAIL | quote }}
+            - name: ADMIN_PASSWD
+              value: {{ .Values.prestashop.env.ADMIN_PASSWD | quote }}
+            - name: PS_FOLDER_ADMIN
+              value: {{ .Values.prestashop.env.PS_FOLDER_ADMIN | quote }}
           ports:
             - name: http
               containerPort: {{ .Values.prestashop.service.ports.http }}
