@@ -41,25 +41,25 @@ spec:
             - name: DB_SERVER
               value: "{{ .Release.Name }}-mysql.default.svc.cluster.local" # Get the IP of the pod running the database
             - name: DB_NAME
-              value: {{ .Values.prestashop.env.DB_NAME | quote }}
+              value: {{ .Values.prestashop.env.dbName | quote }}
             - name: DB_USER 
               value: "root" # This is the only hardcoded variable since database is expecting root user to be named 'root'.
             - name: DB_PASSWD
-              value: {{ .Values.prestashop.env.DB_PASSWD | quote }}
+              value: {{ .Values.prestashop.env.dbPasswd | quote }}
             - name: PS_INSTALL_AUTO
-              value: {{ .Values.prestashop.env.PS_INSTALL_AUTO | quote }}
+              value: {{ .Values.prestashop.env.psInstallAuto | quote }}
             - name: PS_DOMAIN
-              value: {{ .Values.prestashop.env.PS_DOMAIN | quote }}
+              value: {{ .Values.prestashop.env.psDomain | quote }}
             - name: PS_COUNTRY
-              value: {{ .Values.prestashop.env.PS_COUNTRY | quote }}
+              value: {{ .Values.prestashop.env.psCountry | quote }}
             - name: PS_LANGUAGE
-              value: {{ .Values.prestashop.env.PS_LANGUAGE | quote }}
+              value: {{ .Values.prestashop.env.psLanguage | quote }}
             - name: ADMIN_MAIL
-              value: {{ .Values.prestashop.env.ADMIN_MAIL | quote }}
+              value: {{ .Values.prestashop.env.adminMail | quote }}
             - name: ADMIN_PASSWD
-              value: {{ .Values.prestashop.env.ADMIN_PASSWD | quote }}
+              value: {{ .Values.prestashop.env.adminPasswd | quote }}
             - name: PS_FOLDER_ADMIN
-              value: {{ .Values.prestashop.env.PS_FOLDER_ADMIN | quote }}
+              value: {{ .Values.prestashop.env.psFolderAdmin | quote }}
           ports:
             - name: http
               containerPort: {{ .Values.prestashop.service.ports.http }}

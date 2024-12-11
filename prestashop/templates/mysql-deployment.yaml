@@ -39,9 +39,9 @@ spec:
           # Variables are referenced from 'prestashop/values.yaml'
           env:
             - name: MYSQL_ROOT_PASSWORD
-              value: {{ .Values.prestashop.env.DB_PASSWD | quote }}
+              value: {{ .Values.prestashop.env.dbPasswd | quote }}
             - name: MYSQL_DATABASE
-              value: {{ .Values.prestashop.env.DB_NAME | quote }}
+              value: {{ .Values.prestashop.env.dbName | quote }}
           ports:
             - name: mysql
               containerPort: {{ .Values.mysql.service.ports.mysql }}

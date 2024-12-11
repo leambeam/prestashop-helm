@@ -137,16 +137,16 @@ prestashop:
   
   env:
     # This is the only variable that can't be modified at this point since database is expecting root user to be named 'root'.
-    # DB_USER: "root" 
-    DB_NAME: "prestashop"
-    DB_PASSWD: "adminPrEsTa123" # Change manually for now since causing bugs in the db if done via 'set'
-    PS_INSTALL_AUTO: "1" # Set to true thus will perform an auto install.
-    PS_DOMAIN: "relaamo.fi"
-    PS_COUNTRY: "FI"
-    PS_LANGUAGE: "en"
-    ADMIN_MAIL: "testuser@mail.com"
-    ADMIN_PASSWD: "ReAlPaSsWoRd759***"
-    PS_FOLDER_ADMIN: "admin228"
+    # dbUser: "root" 
+    dbName: "prestashop"
+    dbPasswd: "adminPrEsTa123" # Change manually for now since causing bugs in the db if done via 'set'
+    psInstallAuto: "1" # Set to true thus will perform an auto install.
+    psDomain: "relaamo.fi"
+    psCountry: "FI"
+    psLanguage: "en"
+    adminMail: "testuser@mail.com"
+    adminPasswd: "ReAlPaSsWoRd759***"
+    psFolderAdmin: "admin228"
 
 
 mysql: 
