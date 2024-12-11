@@ -42,8 +42,8 @@ spec:
               value: "{{ .Release.Name }}-mysql.default.svc.cluster.local" # Get the IP of the pod running the database
             - name: DB_NAME
               value: {{ .Values.prestashop.env.DB_NAME | quote }}
-            - name: DB_USER
-              value: {{ .Values.prestashop.env.DB_USER | quote }}
+            - name: DB_USER 
+              value: "root" # This is the only hardcoded variable since database is expecting root user to be named 'root'.
             - name: DB_PASSWD
               value: {{ .Values.prestashop.env.DB_PASSWD | quote }}
             - name: PS_INSTALL_AUTO
