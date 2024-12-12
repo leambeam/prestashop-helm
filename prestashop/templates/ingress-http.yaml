@@ -1,0 +1,29 @@
+{{- if ne .Values.prestashop.ingress.enabled true -}}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ include "prestashop.fullname" . }}-http
+  labels:
+    {{- include "prestashop.labels" . | nindent 4 }}
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+spec:
+  {{- with .Values.prestashop.ingress.className }}
+  ingressClassName: {{ . }}
+  {{- end }}
+  rules:
+  - http:
+      paths:
+        {{- range .Values.prestashop.ingress.paths }}
+        - path: {{ .path }}
+          {{- with .pathType }}
+          pathType: {{ . }}
+          {{- end }}
+          backend:
+            service:
+              name: {{ include "prestashop.fullname" $ }}
+              port:
+                number: {{ $.Values.prestashop.service.ports.http }}
+          {{- end }}
+{{- end }}
+

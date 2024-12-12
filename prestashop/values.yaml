@@ -68,19 +68,20 @@ prestashop:
   # This block is for setting up the ingress for more information can be found here: https://kubernetes.io/docs/concepts/services-networking/ingress/
   ingress:
     enabled: false
-    className: ""
-    annotations: {}
+    className: "nginx"
+    annotations: 
       # kubernetes.io/ingress.class: nginx
       # kubernetes.io/tls-acme: "true"
-    hosts:
-      - host: chart-example.local
-        paths:
-          - path: /
-            pathType: ImplementationSpecific
-    tls: []
-    #  - secretName: chart-example-tls
-    #    hosts:
-    #      - chart-example.local
+      # cert-manager.io/issuer: "letsencrypt-prod"
+    # hosts:
+    #   - host: chart-example.local -- referenced from 'psDomain' in 'ingress.yaml'
+    paths:
+      - path: /
+        pathType: Prefix
+    tls: 
+      - secretName: presta-shop-prod-tls
+      #  hosts:
+      #    - chart-example.local  -- referenced from 'psDomain' in 'ingress.yaml'
 
   resources: {}
     # We usually recommend not to specify default resources and to leave this as a conscious
