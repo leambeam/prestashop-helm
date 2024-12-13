@@ -78,6 +78,42 @@ app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{- end -}}
 
 
+{{/*
+Define different ingress names for http, staging(https), and prod(https).
+*/}}
+{{- define "prestashop.ingressName" -}}
+{{- if and .Values.prestashop.ingress.enabled (not .Values.prestashop.ingress.letsencrypt.isProd) -}}
+{{ include "prestashop.fullname" . }}-staging
+{{- else if and .Values.prestashop.ingress.enabled .Values.prestashop.ingress.letsencrypt.isProd -}}
+{{ include "prestashop.fullname" . }}-prod
+{{- else if not .Values.prestashop.ingress.enabled -}}
+{{ include "prestashop.fullname" .}}-http
+{{- else -}}
+{{ include "prestashop.fullname" . }}
+{{- end -}}
+{{- end }}
+
+{{/*
+Define different issuers for staging(https) and prod(https).
+*/}}
+{{- define "prestashop.certManagerIssuer" -}}
+{{- if .Values.prestashop.ingress.letsencrypt.isProd -}}
+letsencrypt-prod
+{{- else if not .Values.prestashop.ingress.letsencrypt.isProd -}}
+letsencrypt-staging
+{{- end -}}
+{{- end }}
+
+{{/*
+Define ACME server URLs for staging(https) and prod(https)
+*/}}
+{{- define "prestashop.acmeUrl" -}}
+{{- if .Values.prestashop.ingress.letsencrypt.isProd -}}
+https://acme-v02.api.letsencrypt.org/directory
+{{- else if not .Values.prestashop.ingress.letsencrypt.isProd -}}
+https://acme-staging-v02.api.letsencrypt.org/directory
+{{- end -}}
+{{- end }}
 
 
-
+"{{ include "prestashop.certManagerIssuer" . }}"

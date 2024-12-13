@@ -60,6 +60,10 @@ spec:
               value: {{ .Values.prestashop.env.adminPasswd | quote }}
             - name: PS_FOLDER_ADMIN
               value: {{ .Values.prestashop.env.psFolderAdmin | quote }}
+            {{- if .Values.prestashop.ingress.letsencrypt.isProd}}
+            - name: PS_ENABLE_SSL
+              value: "1"
+            {{- end }}
           ports:
             - name: http
               containerPort: {{ .Values.prestashop.service.ports.http }}
