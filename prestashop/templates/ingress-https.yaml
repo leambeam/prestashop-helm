@@ -16,13 +16,13 @@ spec:
   {{- if .Values.prestashop.ingress.tls }}
   tls:
     - hosts:
-        - {{ .Values.prestashop.env.psDomain | quote }}
+        - {{ .Values.prestashop.env.psDomain }}
     {{- range .Values.prestashop.ingress.tls }}
       secretName: {{ .secretName }}
     {{- end }}
   {{- end }}
   rules:
-    - host: {{ .Values.prestashop.env.psDomain | quote }}
+    - host: {{ .Values.prestashop.env.psDomain }}
       http:
         paths:
           {{- range .Values.prestashop.ingress.paths }}
