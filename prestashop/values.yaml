@@ -67,25 +67,26 @@ prestashop:
 
   # This block is for setting up the ingress for more information can be found here: https://kubernetes.io/docs/concepts/services-networking/ingress/
   ingress: 
-    enabled: true
+    # true: use https ingress 
+    # false: use http ingress
+    enabled: false
     letsencrypt:
-    # true: use production version of the letsencrypt issuer and ingress.
+    # true: use production version of the letsencrypt issuer and ingress
     # false: use staging version of letsencrypt issuer and ingress
-      isProd: true    
+      isProd: false    
     className: "nginx"
     annotations: 
       # kubernetes.io/ingress.class: nginx
       # kubernetes.io/tls-acme: "true"
-      # cert-manager.io/issuer: "letsencrypt-prod"
     # hosts:
-    #   - host: chart-example.local -- referenced from 'psDomain' in 'ingress.yaml'
+    #   - host: chart-example.local -- referenced from 'psDomain' in 'ingress-https.yaml'
     paths:
       - path: /
         pathType: Prefix
     tls: 
       - secretName: presta-shop-tls
       #  hosts:
-      #    - chart-example.local  -- referenced from 'psDomain' in 'ingress.yaml'
+      #    - chart-example.local  -- referenced from 'psDomain' in 'ingress-https.yaml'
 
   resources: {}
     # We usually recommend not to specify default resources and to leave this as a conscious
@@ -143,10 +144,12 @@ prestashop:
   env:
     # This is the only variable that can't be modified at this point since database is expecting root user to be named 'root'.
     # dbUser: "root" 
+    # Do not change unless you want to perform a manual install
+    psInstallAuto: "1" # Set to true thus will perform an auto install.
+
     dbName: "prestashop"
     dbPasswd: "adminPrEsTa123" 
-    psInstallAuto: "1" # Set to true thus will perform an auto install.
-    psDomain: "relaamo.fi"
+    psDomain: "wimma-capstone.jamk.fi"
     psCountry: "FI"
     psLanguage: "en"
     adminMail: "testuser@mail.com"
