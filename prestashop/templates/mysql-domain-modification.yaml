@@ -1,0 +1,99 @@
+{{/*
+Batch job for automating domain and protocol updates in the MySQL database (HTTP to HTTPS or vice versa).
+Consists of two containers:
+1. First checks the status of the 'prestashop-domain-modification' job.
+2. Second updates the database if the job succeeds.
+Enables or disables PrestaShop SSL configuration based on ingress setting (switching between HTTP or HTTPS) and updates shop URL tables.
+Requires: 
+- RBAC permissions: 'get jobs', 'get jobs/log' (enabled in the default service account in microk8s).
+- @param 'common.persistence.enabled': true 
+- @param 'common.persistence.switchDomain': true
+*/}}
+
+{{- if and .Values.common.persistence.enabled ( .Values.common.persistence.switchDomain ) }} 
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: mysql-domain-modification
+spec:
+  ttlSecondsAfterFinished: 100 # Delete the job and its associated pod in 100 seconds upon completion or failure
+  template:
+    spec:
+      containers:
+        - name: prestashop-domain-modification-status-check
+          image: bitnami/kubectl
+          command: 
+            - bash
+            - -c
+            - |
+              while true; do
+                succeeded=$(kubectl get job prestashop-domain-modification -o=jsonpath='{.status.succeeded}')
+                failed=$(kubectl get job prestashop-domain-modification -o=jsonpath='{.status.failed}')
+
+                if [ "$succeeded" == "1" ]; then
+                  echo "prestashop-domain-modification job succeded, proceeding with the database update"
+                  kubectl logs jobs/prestashop-domain-modification
+                  break
+                elif [ "$failed" == "1" ]; then
+                  echo "prestashop-domain-modification job failed, the database won't be updated"
+                  kubectl logs jobs/prestashop-domain-modification
+                  exit 1
+                fi 
+
+                sleep 3
+              done
+        - name: mysql-domain-modification
+          image: "{{ .Values.mysql.image.repository }}:{{ .Values.mysql.image.tag | default .Chart.AppVersion }}"
+          env: 
+            - name: DB_PASSWD
+              value: {{ .Values.prestashop.env.dbPasswd }}
+            - name: DB_NAME
+              value: {{ .Values.prestashop.env.dbName }}
+            - name: PS_DOMAIN
+              value: {{ .Values.prestashop.env.psDomain | quote }}  
+          command: 
+            - sh
+            - -c
+            - |
+              until mysql -uroot -p$DB_PASSWD -h {{ .Release.Name }}-mysql -e "SELECT 1" $DB_NAME; do
+                echo "Waiting for MySQL to be available..."
+                sleep 5
+              done 
+              mysql -uroot -p$DB_PASSWD -h {{ .Release.Name }}-mysql $DB_NAME <<EOF
+
+              {{- if .Values.prestashop.ingress.enabled }}
+              SELECT * FROM ps_configuration WHERE id_configuration = 29;
+              UPDATE ps_configuration SET value = 1 WHERE id_configuration = 29;
+              SELECT * FROM ps_configuration WHERE id_configuration = 29;
+
+              SELECT * FROM ps_configuration WHERE id_configuration = 293;
+              UPDATE ps_configuration SET value = 1 WHERE id_configuration = 293;
+              SELECT * FROM ps_configuration WHERE id_configuration = 293;
+              {{- end }}
+
+              {{- if not .Values.prestashop.ingress.enabled }}
+              SELECT * FROM ps_configuration WHERE id_configuration = 29;
+              UPDATE ps_configuration SET value = 0 WHERE id_configuration = 29;
+              SELECT * FROM ps_configuration WHERE id_configuration = 29;
+
+              SELECT * FROM ps_configuration WHERE id_configuration = 293;
+              UPDATE ps_configuration SET value = 0 WHERE id_configuration = 293;
+              SELECT * FROM ps_configuration WHERE id_configuration = 293;
+              {{- end }}
+
+              SELECT * FROM ps_configuration WHERE id_configuration = 234;
+              UPDATE ps_configuration SET value = '$PS_DOMAIN' WHERE id_configuration = 234;
+              SELECT * FROM ps_configuration WHERE id_configuration = 234;
+
+              SELECT * FROM ps_configuration WHERE id_configuration = 235;
+              UPDATE ps_configuration SET value = '$PS_DOMAIN' WHERE id_configuration = 235;
+              SELECT * FROM ps_configuration WHERE id_configuration = 235;
+
+              SELECT * FROM ps_shop_url;
+              UPDATE ps_shop_url SET domain = '$PS_DOMAIN', domain_ssl = '$PS_DOMAIN' WHERE id_shop_url = 1;
+              SELECT * FROM ps_shop_url;
+
+              EOF
+      restartPolicy: Never
+  backoffLimit: 0
+{{- end }}

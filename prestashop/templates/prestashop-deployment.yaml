@@ -1,3 +1,8 @@
+{{/*
+Deployment resource for PrestaShop
+Creates the PrestaShop pod, with behavior controlled by values in 'values.yaml'.
+*/}}
+
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -30,6 +35,30 @@ spec:
       serviceAccountName: {{ include "prestashop.serviceAccountName" . }}
       securityContext:
         {{- toYaml .Values.prestashop.podSecurityContext | nindent 8 }}
+    # If persistence is enabled and user did not provide the PV, the new one will be created.
+      {{- if and .Values.common.persistence.enabled ( empty .Values.prestashop.persistence.existingPVName ) }}
+    # This init container ensures PrestaShop's files are copied to the persistent volume before the main container starts.
+    # Without this, the installation could fail due to missing files or conflicts between the container's storage and the PV.
+    # The `pv-install.lock` prevents re-running this process unnecessarily on subsequent starts.
+      initContainers: 
+      - name: init-prestashop
+        image: "{{ .Values.prestashop.image.repository }}:{{ .Values.prestashop.image.tag | default .Chart.AppVersion }}"
+        imagePullPolicy: {{ .Values.prestashop.image.pullPolicy }}
+        command:
+          - sh
+          - -c
+          - |        
+            if [ ! -f /mnt/html/pv-install.lock ]; then
+              cp -R /var/www/html/* /mnt/html
+              chown -R www-data:www-data /mnt/html
+              touch /mnt/html/pv-install.lock
+            else
+              echo "PrestaShop is already installed"
+            fi
+        volumeMounts:
+        - name: prestashop-data
+          mountPath: /mnt/html
+      {{- end }}
       containers:
         - name: {{ .Chart.Name }}
           securityContext:
@@ -77,13 +106,17 @@ spec:
             {{- toYaml .Values.prestashop.readinessProbe | nindent 12 }}
           resources:
             {{- toYaml .Values.prestashop.resources | nindent 12 }}
-          {{- with .Values.prestashop.volumeMounts }}
+          {{- if .Values.common.persistence.enabled }}
+          {{- with .Values.prestashop.persistence.volumeMounts }}
           volumeMounts:
             {{- toYaml . | nindent 12 }}
           {{- end }}
-      {{- with .Values.prestashop.volumes }}
+          {{- end }}
+      {{- if .Values.common.persistence.enabled }}
+      {{- with .Values.prestashop.persistence.volumes }}
       volumes:
         {{- toYaml . | nindent 8 }}
+      {{- end }}
       {{- end }}
       {{- with .Values.prestashop.nodeSelector }}
       nodeSelector:

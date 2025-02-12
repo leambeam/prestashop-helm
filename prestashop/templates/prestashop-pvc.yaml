@@ -1,0 +1,30 @@
+{{/*
+Persistent Volume Claim for PrestaShop
+Creates a Persistent Volume (PV) for PrestaShop
+Requires:  
+- @param 'common.persistence.enabled': true  
+- microk8s 'hostpath-storage' addon must be enabled
+- StorageClass 'hostpath-retain'
+Docs:  
+- https://microk8s.io/docs/addon-hostpath-storage 
+*/}}
+
+{{- if .Values.common.persistence.enabled }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: prestashop-pvc
+  namespace: default
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: hostpath-retain
+  volumeMode: Filesystem
+  # If user provides the name of existing PV attach to it instead of creating a new one.
+  {{- if .Values.prestashop.persistence.existingPVName }}
+  volumeName: {{ .Values.prestashop.persistence.existingPVName }}
+  {{- end }}
+  resources:
+    requests:
+      storage: {{ .Values.prestashop.persistence.size }}
+{{- end }}

@@ -115,4 +115,13 @@ https://acme-staging-v02.api.letsencrypt.org/directory
 {{- end -}}
 {{- end }}
 
-
+{{/*
+Determine batch job name based on the protocol (HTTP or HTTPS)
+*/}}
+{{- define "prestashop.jobName" -}}
+{{- if .Values.prestashop.ingress.enabled -}}
+https
+{{- else if not .Values.prestashop.ingress.enabled -}}
+http
+{{- end }}
+{{- end }}

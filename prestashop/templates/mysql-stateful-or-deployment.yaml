@@ -1,10 +1,19 @@
+{{/*
+StatefulSet/Deployment resource for MySQL
+The resource type depends on the 'common.persistence.enabled'
+Creates the MySQL pod, with behavior controlled by values in 'values.yaml'.
+*/}}
+
 apiVersion: apps/v1
-kind: Deployment
+kind: {{ if .Values.common.persistence.enabled }}StatefulSet{{ else }}Deployment{{ end }}
 metadata:
   name: {{ include "mysql.fullname" . }}
   labels:
     {{- include "mysql.labels" . | nindent 4 }}
 spec:
+  {{- if .Values.common.persistence.enabled  }}
+  serviceName: mysql
+  {{- end }}
   {{- if not .Values.mysql.autoscaling.enabled }}
   replicas: {{ .Values.mysql.replicaCount }}
   {{- end }}
@@ -31,12 +40,11 @@ spec:
       securityContext:
         {{- toYaml .Values.mysql.podSecurityContext | nindent 8 }}
       containers:
-        - name: mysql #{{ .Chart.Name }}
+        - name: mysql
           securityContext:
             {{- toYaml .Values.mysql.securityContext | nindent 12 }}
           image: "{{ .Values.mysql.image.repository }}:{{ .Values.mysql.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.mysql.image.pullPolicy }}
-          # Variables are referenced from 'prestashop/values.yaml'
           env:
             - name: MYSQL_ROOT_PASSWORD
               value: {{ .Values.prestashop.env.dbPasswd | quote }}
@@ -52,14 +60,12 @@ spec:
             {{- toYaml .Values.mysql.readinessProbe | nindent 12 }}
           resources:
             {{- toYaml .Values.mysql.resources | nindent 12 }}
-          {{- with .Values.mysql.volumeMounts }}
-          volumeMounts:
+          {{- if .Values.common.persistence.enabled }}
+          {{- with .Values.mysql.persistence.volumeMounts }}
+          volumeMounts: 
             {{- toYaml . | nindent 12 }}
           {{- end }}
-      {{- with .Values.mysql.volumes }}
-      volumes:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
+          {{- end }}
       {{- with .Values.mysql.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
@@ -72,3 +78,18 @@ spec:
       tolerations:
         {{- toYaml . | nindent 8 }}
       {{- end }}
+  {{- if .Values.common.persistence.enabled }}       
+  volumeClaimTemplates:
+    - metadata:
+        name: {{ .Values.mysql.persistence.volumeClaimName }}
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: {{ .Values.mysql.persistence.size }} 
+        storageClassName: hostpath-retain
+        {{- if .Values.mysql.persistence.existingPVName }}
+        volumeName: {{ .Values.mysql.persistence.existingPVName }}
+        {{- end }}
+  {{- end }}

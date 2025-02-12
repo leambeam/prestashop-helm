@@ -1,6 +1,30 @@
-# Default values for prestashop.
+# Default values for PrestaShop and MySQL workloads.
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
+
+# Common logic shared across PrestaShop and MySQL workloads
+common:
+  # Persistence settings for PrestaShop and MySQL workloads
+  persistence: 
+    # true: Enables persistent storage:
+    # - Uses a StatefulSet for MySQL.
+    # - Creates PersistentVolumeClaims (PVCs) for MySQL and PrestaShop.
+    # - Creates a shared StorageClass.
+    # - Mounts volumes to both PrestaShop and MySQL.
+    # - Makes MySQL a headless service for stable DNS.
+    #
+    # false: Disables persistent storage:
+    # - Uses a Deployment instead of a StatefulSet for MySQL.
+    # - No persistent storage (PVCs or StorageClass) PrestaShop and MySQL.
+    # - No volume mounts for PrestaShop and MySQL.
+    enabled: false
+    # Requires persistence.enabled: true
+    # Triggeres two batch jobs that update domain in PrestaShop and MySQL.
+    switchDomain: false
+    # Requires persistence.enabled: true
+    # Directory must be manually created
+    # Location on the host machine where the contents of the Persistent Volumes will be stored
+    storageDirectory: /mnt/prestashop-storage
 
 # This will set the replicaset count more information can be found here: https://kubernetes.io/docs/concepts/workloads/controllers/replicaset/
 prestashop: 
@@ -118,19 +142,25 @@ prestashop:
     targetCPUUtilizationPercentage: 80
     targetMemoryUtilizationPercentage: 80
 
-  # Additional volumes on the output Deployment definition.
-  volumes: []
-  # - name: foo
-  #   secret:
-  #     secretName: mysecret
-  #     optional: false
+  # Configurations for Presistent Volume (PV) and Presistent Volume Claim (PVC) for PrestaShop
+  # Requires common.persistence.enabled: true
+  persistence:
+    # The name of the existing Persistent Volume (PV). 
+    # If provided, the PrestaShop pod will be attached to it.
+    existingPVName: ""
+    # PVC storage request for PrestaShop volume
+    size: 8Gi
+    # PrestaShop volume
+    volumes: 
+    - name: prestashop-data
+      persistentVolumeClaim:
+        claimName: prestashop-pvc
+    # PrestaShop volume mount
+    volumeMounts: 
+    - name: prestashop-data
+      mountPath: "/var/www/html"
 
-  # Additional volumeMounts on the output Deployment definition.
-  volumeMounts: []
-  # - name: foo
-  #   mountPath: "/etc/foo"
-  #   readOnly: true
-
+  
   nodeSelector: {}
 
   tolerations: []
@@ -213,6 +243,7 @@ mysql:
   # This is for setting up a service more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/
   service:
     # This sets the service type more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#publishing-services-service-types
+    # Used by 'mysql' service account when persistence is disabled 
     type: ClusterIP
     # This sets the ports more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#field-spec-ports
     ports: # Set ports for external access
@@ -249,18 +280,21 @@ mysql:
     targetCPUUtilizationPercentage: 80
     targetMemoryUtilizationPercentage: 80
 
-  # Additional volumes on the output Deployment definition.
-  volumes: []
-  # - name: foo
-  #   secret:
-  #     secretName: mysecret
-  #     optional: false
+  # Configurations for Presistent Volume (PV) and Presistent Volume Claim (PVC) for MySQL
+  # Requires common.persistence.enabled: true
+  persistence:
+    # The name of the existing Persistent Volume (PV). 
+    # If provided, the MySQL pod will be attached to it.
+    existingPVName: ""
+    # PVC storage request for MySQL volume
+    size: 8Gi
+    # MySQL volume claim name
+    volumeClaimName: mysql-data
+    # MySQL volume mount
+    volumeMounts: 
+    - name: mysql-data
+      mountPath: "/var/lib/mysql"
 
-  # Additional volumeMounts on the output Deployment definition.
-  volumeMounts: []
-  # - name: foo
-  #   mountPath: "/etc/foo"
-  #   readOnly: true
 
   nodeSelector: {}
 
