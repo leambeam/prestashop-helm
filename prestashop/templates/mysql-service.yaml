@@ -5,7 +5,11 @@ metadata:
   labels:
     {{- include "mysql.labels" . | nindent 4 }}
 spec:
+  {{- if .Values.common.persistence.enabled }}
+  clusterIP: None 
+  {{- else }}
   type: {{ .Values.mysql.service.type }}
+  {{- end }}
   ports:
     - port: {{ .Values.mysql.service.ports.mysql }}
       targetPort: mysql

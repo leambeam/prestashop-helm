@@ -1,0 +1,118 @@
+{{/*
+Batch job for automating domain and protocol updates in PrestaShops Persistent Volume 
+Updates domain in .htaccess, robots.txt, and HTML files of the ps_emailalerts module (HTTP to HTTPS or vice versa).
+Clears cache to prevent redirects to the old domain.
+Requires:
+- @param 'common.persistence.enabled': true
+- @param 'common.persistence.switchDomain': true
+*/}}
+
+{{- if and .Values.common.persistence.enabled ( .Values.common.persistence.switchDomain ) }} 
+{{- $protocol := (include "prestashop.jobName" .) -}}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: prestashop-domain-modification
+spec:
+  ttlSecondsAfterFinished: 100 # Delete the job and its associated pod in 100 seconds upon completion or failure
+  template:
+    spec:
+      containers:
+        - name: prestashop-domain-modification
+          image: "{{ .Values.prestashop.image.repository }}:{{ .Values.prestashop.image.tag | default .Chart.AppVersion }}"
+          env: 
+            - name: PS_DOMAIN
+              value: {{ .Values.prestashop.env.psDomain | quote }} 
+          volumeMounts:
+            - name: prestashop-data
+              mountPath: /var/www/html
+          command: 
+            - bash
+            - -c
+            - |
+              # -- Modify .htaccess --
+              
+              HTACCESS_FILE="/var/www/html/.htaccess"
+              NEW_DOMAIN="$PS_DOMAIN"
+
+              if [ -f "$HTACCESS_FILE" ]; then
+                  # Extract the current domain
+                  CURRENT_DOMAIN=$(grep -oP "RewriteCond %{HTTP_HOST} \^\K.*(?=\$)" "$HTACCESS_FILE" | head -n 1 | sed 's/\$$//')
+                  
+                  # Validate the current domain
+                  if [ -z "$CURRENT_DOMAIN" ]; then
+                      echo -e "Error: could not detect the current domain in the .htaccess file.\n"
+                      exit 1 
+                  else 
+                      # Compare the new domain with the current domain
+                      if [ "$CURRENT_DOMAIN" == "$NEW_DOMAIN" ]; then
+                          echo -e "Error: the new domain is the same as the current domain.\n"
+                          exit 1
+                      fi 
+
+                      # Escape special characters for sed
+                      ESCAPED_CURRENT_DOMAIN=$(echo "$CURRENT_DOMAIN" | sed 's/\./\\./g')
+                      ESCAPED_NEW_DOMAIN=$(echo "$NEW_DOMAIN" | sed 's/\./\\./g')
+
+                      # Replace the current domain with the new domain
+                      sed -i "s/$ESCAPED_CURRENT_DOMAIN/$ESCAPED_NEW_DOMAIN/g" "$HTACCESS_FILE"
+                      echo -e "Replaced domain '$CURRENT_DOMAIN' with '$NEW_DOMAIN' in the .htaccess file.\n"
+                  fi
+              else 
+                  echo -e "Error: .htaccess file not found at '$HTACCESS_FILE'\n"
+              fi
+
+              # -- Remove cache -- 
+
+              CACHE_DIR="/var/www/html/var/cache/prod"
+
+              if [ -d "$CACHE_DIR" ]; then
+                  # Remove every file in the cache directory
+                  rm -r "$CACHE_DIR"/*
+                  echo -e "There are $(ls -1 "$CACHE_DIR" | wc -l ) files in the '$CACHE_DIR' after cleanup\n"
+              else
+                  echo -e "Error: no cache files found in the directory: '$CACHE_DIR'\n"
+              fi
+
+              # -- Update domain in the robots.txt -- 
+
+              ROBOTS_FILE="/var/www/html/robots.txt"
+
+              if [ -f "$ROBOTS_FILE" ]; then
+                  sed -i -e "s/# Directories for $CURRENT_DOMAIN/# Directories for $NEW_DOMAIN/g" "$ROBOTS_FILE"
+                  echo -e "Replaced '$CURRENT_DOMAIN' with '$NEW_DOMAIN' in robots.txt\n"
+              else 
+                  echo -e "Error: robots.txt file not found at '$ROBOTS_FILE'\n"
+              fi
+
+              # -- Update domain in the mail files --
+
+              MAIL_FILES=(
+              "/var/www/html/mails/en/order_conf.html"
+              "/var/www/html/modules/ps_emailalerts/mails/en/new_order.html"
+              "/var/www/html/modules/ps_emailalerts/mails/en/return_slip.html"
+              )
+
+              for MAIL_FILE in "${MAIL_FILES[@]}"; do
+                  if [ -f "$MAIL_FILE" ]; then 
+                      # Get the URLs containing current domain
+                      echo -e "\nChecking URLs in $(basename "$MAIL_FILE") before modification:\n"
+                      grep -o 'http[s]*://'"$CURRENT_DOMAIN"'[^"'"'"']*' "$MAIL_FILE" || echo -e "No matching URLs found.\n"
+
+                      # Update URLs and change the protocol based on the state of ingress
+                      sed -i -e "s|\bhttp[s]\?://$CURRENT_DOMAIN|{{$protocol}}://$NEW_DOMAIN|g" "$MAIL_FILE"
+
+                      # Get the URLs containing new domain
+                      echo -e "\nUpdated URLs in $(basename "$MAIL_FILE") after modification:\n"
+                      grep -o 'http[s]*://'"$NEW_DOMAIN"'[^"'"'"']*' "$MAIL_FILE" || echo -e "No URLs updated.\n"
+                  else 
+                      echo -e "Error: $(basename "$MAIL_FILE") file not found at '$MAIL_FILE'\n"
+                  fi
+              done
+      restartPolicy: Never
+      volumes:
+        - name: prestashop-data
+          persistentVolumeClaim:
+            claimName: prestashop-pvc
+  backoffLimit: 0
+{{- end }}

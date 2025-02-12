@@ -1,0 +1,22 @@
+{{/*
+Storage Class for PrestaShop and MySQL Persistent Volumes
+Defines the rules for how persistent volumes for PrestaShop and MySQL will be dynamically provisioned.
+Requires:  
+- @param 'common.persistence.enabled': true 
+- microk8s 'hostpath-storage' addon must be enabled 
+- create the directory for 'pvDir'
+Docs:  
+- https://microk8s.io/docs/addon-hostpath-storage
+*/}}
+
+{{- if .Values.common.persistence.enabled }}
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: hostpath-retain
+provisioner: microk8s.io/hostpath
+reclaimPolicy: Retain # Data persists after PVC deletion
+volumeBindingMode: WaitForFirstConsumer # Bind volume after pod scheduling
+parameters:
+  pvDir: {{ .Values.common.persistence.storageDirectory }}
+{{- end }}
