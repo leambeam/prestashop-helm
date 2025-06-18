@@ -7,10 +7,10 @@ Operational but would benefit from some further development
 ## Further Development
 
 * Security:
-    * Add password generation logic. Currently, database password `dbPasswd` and admin dashboard password `psFolderAdmin` are declared manually in `prestashop/values.yaml`. This approach allows users to update passwords manually if needed, as shown in the attached documentation. However, a better approach would be to generate random passwords using [Helm random functions](https://helm.sh/docs/chart_template_guide/function_list/#randalphanum-randalpha-randnumeric-and-randascii) and store them as [secrets](https://kubernetes.io/docs/concepts/configuration/secret/), which can then be retrieved after deployment with the command that can be provided in the `prestashop/templates/NOTES.txt`. This approach is used in Bitnami PrestaShop Helm chart: [see](https://artifacthub.io/packages/helm/bitnami/prestashop)
-    * Add pod security configurations: [see](https://kubernetes.io/docs/tasks/configure-pod-container/security-context/)
+    * Add password generation logic. Currently, database password `dbPasswd` and admin dashboard password `adminPasswd` are declared manually in `prestashop/values.yaml`. This approach allows users to update passwords manually if needed, as shown in the attached documentation. However, a better approach would be to generate random passwords using [Helm random functions](https://helm.sh/docs/chart_template_guide/function_list/#randalphanum-randalpha-randnumeric-and-randascii) and store them as [secrets](https://kubernetes.io/docs/concepts/configuration/secret/), which can then be retrieved after deployment with the command that can be provided in the `prestashop/templates/NOTES.txt`. This approach is used in Bitnami PrestaShop Helm chart: [see](https://artifacthub.io/packages/helm/bitnami/prestashop)
+    * Add pod security context: [see](https://kubernetes.io/docs/tasks/configure-pod-container/security-context/)
 
-* Configuration:
+* Configurations:
     * Helpers (`_helpers.tpl`) require testing and updates 
     * Create a dedicated service account for the MySQL workload. Then, in `templates/mysql-stateful-or-deployment.yaml` line 39, update the `serviceAccountName` from `prestashop` to `mysql` and test functionality
     * Service account for the PrestaShop workload should also be reviewed and updated if needed
