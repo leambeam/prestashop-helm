@@ -1,4 +1,4 @@
-# presta-shop-helm-x
+# presta-shop-helm
 
 This is a mirror of the GitLab repository containing the Helm chart that was developed during my [Wimma Capstone](https://wimma-capstone.jamk.fi/) internship. Its aim is to deploy PrestaShop on MicroK8s in a reproducible manner. It subsequently became one of the components of my Bachelor's thesis.
 
