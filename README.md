@@ -1,8 +1,14 @@
 # presta-shop-helm-x
 
+This is a mirror of the GitLab repository containing the Helm chart that was developed during my [Wimma Capstone](https://wimma-capstone.jamk.fi/) internship to deploy PrestaShop on MicroK8s in a reproducible manner. It subsequently became one of the components of my Bachelor's thesis.
+
 ## Status
 
 Operational but would benefit from some further development
+
+## Documentation
+
+Documentation can be found here: [Deploy custom PrestaShop Helm chart (internal repos)](https://wimma-capstone.pages.labranet.jamk.fi/support-material/3.%20OPS/Reference%20Product%20-%20Prestashop/Setup%20guides/Helm/helm-prestashop-deployment-internal-repos/)
 
 ## Further Development
 
@@ -18,7 +24,3 @@ Operational but would benefit from some further development
     * Review the autoscaling configuration or remove it if not needed (`prestashop/templates/hpa.yaml`)
     * Fix the HTTP ingress naming logic, which is currently confusing - `ingress.enabled: false` enables HTTP ingress.
     * Implement probes: [see](https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/)
-
-## Documentation
-
-Documentation can be found here: [Deploy custom PrestaShop Helm chart (internal repos)](https://wimma-capstone.pages.labranet.jamk.fi/support-material/3.%20OPS/Reference%20Product%20-%20Prestashop/Setup%20guides/Helm/helm-prestashop-deployment-internal-repos/)
